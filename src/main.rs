@@ -37,5 +37,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
     AppState::restart_timer(&app_state);
 
-    slint::run_event_loop()
+    // This is a tray-resident app: hiding the settings or reminder window
+    // must not exit the process.
+    slint::run_event_loop_until_quit()
 }
