@@ -189,6 +189,9 @@ use crate::state::{show_reminder, AppState};
 /// already fired today. Marks `last_fired_date` and persists settings on
 /// the first match.
 pub fn check_due_reminders(state: &Rc<RefCell<AppState>>) {
+    if state.borrow().settings.muted {
+        return;
+    }
     let now = chrono::Local::now();
     let today = now.date_naive();
     let current_time = now.time();

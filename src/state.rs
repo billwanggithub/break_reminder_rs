@@ -30,6 +30,10 @@ impl AppState {
     }
 
     pub fn restart_timer(state: &Rc<RefCell<Self>>) {
+        state.borrow().timer.stop();
+        if state.borrow().settings.muted {
+            return;
+        }
         let interval_minutes = state.borrow().settings.interval_minutes;
         let weak_state = Rc::downgrade(state);
         state.borrow().timer.start(
@@ -44,6 +48,10 @@ impl AppState {
     }
 
     pub fn restart_schedule_timer(state: &Rc<RefCell<Self>>) {
+        state.borrow().schedule_timer.stop();
+        if state.borrow().settings.muted {
+            return;
+        }
         let weak_state = Rc::downgrade(state);
         state.borrow().schedule_timer.start(
             TimerMode::Repeated,

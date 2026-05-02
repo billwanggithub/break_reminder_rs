@@ -11,6 +11,8 @@ pub struct Settings {
     pub auto_start: bool,
     #[serde(rename = "PlaySound", default)]
     pub play_sound: bool,
+    #[serde(rename = "Muted", default)]
+    pub muted: bool,
     #[serde(rename = "ScheduledReminders", default)]
     pub scheduled_reminders: Vec<ScheduledReminder>,
 }
@@ -25,6 +27,7 @@ impl Default for Settings {
             interval_minutes: 45,
             auto_start: true,
             play_sound: false,
+            muted: false,
             scheduled_reminders: Vec::new(),
         }
     }
