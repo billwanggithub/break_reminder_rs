@@ -3,6 +3,7 @@
 mod settings;
 mod state;
 mod tray;
+mod autostart;
 
 use slint::ComponentHandle;
 use state::AppState;
@@ -12,6 +13,12 @@ slint::include_modules!();
 fn main() -> Result<(), slint::PlatformError> {
     let path = settings::settings_path();
     let loaded = settings::load(&path);
+
+    if let Ok(exe) = std::env::current_exe() {
+        autostart::apply(loaded.auto_start, &exe);
+    } else {
+        eprintln!("[break_reminder_rs] could not determine current exe path; skipping autostart sync");
+    }
 
     let settings_window = MainWindow::new()?;
     let app_state = AppState::new(path, loaded, settings_window.as_weak());
