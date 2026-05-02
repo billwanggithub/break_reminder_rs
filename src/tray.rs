@@ -1,8 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use tray_icon::{
-    menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem},
+    menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem},
     Icon, MouseButton, TrayIcon, TrayIconBuilder, TrayIconEvent,
 };
 
@@ -14,6 +15,12 @@ use crate::state::{show_reminder, show_settings, AppState};
 // via `slint::invoke_from_event_loop` and recover state from this thread_local.
 thread_local! {
     static APP_STATE: RefCell<Option<Rc<RefCell<AppState>>>> = const { RefCell::new(None) };
+    static MUTE_VISUALS: RefCell<Option<MuteVisuals>> = const { RefCell::new(None) };
+}
+
+struct MuteVisuals {
+    mute_item: Arc<CheckMenuItem>,
+    tray: Arc<TrayIcon>,
 }
 
 pub fn install_state(state: Rc<RefCell<AppState>>) {
@@ -28,29 +35,65 @@ fn with_state<F: FnOnce(&Rc<RefCell<AppState>>)>(f: F) {
     });
 }
 
-pub struct Tray {
-    _icon: TrayIcon,
+/// Update the tray's mute checkmark and tooltip to match the given state.
+/// Called from the tray menu handler AND from main.rs's save closure.
+pub fn refresh_mute_visuals(muted: bool) {
+    MUTE_VISUALS.with(|cell| {
+        if let Some(v) = cell.borrow().as_ref() {
+            v.mute_item.set_checked(muted);
+            let tooltip = if muted {
+                "休息提醒小幫手 (請勿打擾中)"
+            } else {
+                "休息提醒小幫手 (雙擊開啟設定)"
+            };
+            let _ = v.tray.set_tooltip(Some(tooltip));
+        }
+    });
 }
 
-pub fn build() -> Tray {
+pub struct Tray {
+    _icon: Arc<TrayIcon>,
+}
+
+pub fn build(initial_muted: bool) -> Tray {
     let icon = load_icon();
 
     let menu = Menu::new();
+    let mute_item = CheckMenuItem::new("請勿打擾", true, initial_muted, None);
     let settings_item = MenuItem::new("設定 (Settings)", true, None);
     let break_item = MenuItem::new("立刻休息 (Break Now)", true, None);
     let exit_item = MenuItem::new("離開 (Exit)", true, None);
+    menu.append(&mute_item).unwrap();
+    menu.append(&PredefinedMenuItem::separator()).unwrap();
     menu.append(&settings_item).unwrap();
     menu.append(&break_item).unwrap();
     menu.append(&PredefinedMenuItem::separator()).unwrap();
     menu.append(&exit_item).unwrap();
 
+    let tooltip = if initial_muted {
+        "休息提醒小幫手 (請勿打擾中)"
+    } else {
+        "休息提醒小幫手 (雙擊開啟設定)"
+    };
+
     let tray = TrayIconBuilder::new()
         .with_menu(Box::new(menu))
-        .with_tooltip("休息提醒小幫手 (雙擊開啟設定)")
+        .with_tooltip(tooltip)
         .with_icon(icon)
         .build()
         .expect("failed to build tray icon");
 
+    let tray = Arc::new(tray);
+    let mute_item = Arc::new(mute_item);
+
+    MUTE_VISUALS.with(|cell| {
+        *cell.borrow_mut() = Some(MuteVisuals {
+            mute_item: mute_item.clone(),
+            tray: tray.clone(),
+        });
+    });
+
+    let mute_id = mute_item.id().clone();
     let settings_id = settings_item.id().clone();
     let break_id = break_item.id().clone();
     let exit_id = exit_item.id().clone();
@@ -59,12 +102,23 @@ pub fn build() -> Tray {
     MenuEvent::set_event_handler(Some(move |event: MenuEvent| {
         // The outer handler is `Fn`, so each invocation must clone the ids
         // afresh before moving them into the `FnOnce` posted to the UI thread.
+        let mute_id = mute_id.clone();
         let settings_id = settings_id.clone();
         let break_id = break_id.clone();
         let exit_id = exit_id.clone();
         slint::invoke_from_event_loop(move || {
             with_state(|state| {
-                if event.id == settings_id {
+                if event.id == mute_id {
+                    let new_value = !state.borrow().settings.muted;
+                    state.borrow_mut().settings.muted = new_value;
+                    state.borrow().save();
+                    AppState::restart_timer(state);
+                    AppState::restart_schedule_timer(state);
+                    if !new_value {
+                        crate::schedule::check_due_reminders(state);
+                    }
+                    refresh_mute_visuals(new_value);
+                } else if event.id == settings_id {
                     show_settings(state);
                 } else if event.id == break_id {
                     show_reminder(state, None);

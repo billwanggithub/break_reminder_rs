@@ -113,7 +113,7 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
-    let _tray = tray::build();
+    let _tray = tray::build(app_state.borrow().settings.muted);
     tray::install_state(app_state.clone());
 
     AppState::restart_timer(&app_state);
