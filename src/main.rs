@@ -24,6 +24,7 @@ fn main() -> Result<(), slint::PlatformError> {
     let app_state = AppState::new(path, loaded, settings_window.as_weak());
 
     settings_window.set_interval_minutes(app_state.borrow().settings.interval_minutes as i32);
+    settings_window.set_auto_start(app_state.borrow().settings.auto_start);
 
     settings_window.on_save_clicked({
         let weak_state = std::rc::Rc::downgrade(&app_state);
@@ -31,10 +32,18 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             let Some(state) = weak_state.upgrade() else { return };
             let Some(window) = weak_window.upgrade() else { return };
-            let new_value = window.get_interval_minutes().max(1) as u32;
-            state.borrow_mut().settings.interval_minutes = new_value;
+            let new_interval = window.get_interval_minutes().max(1) as u32;
+            let new_auto_start = window.get_auto_start();
+            {
+                let mut s = state.borrow_mut();
+                s.settings.interval_minutes = new_interval;
+                s.settings.auto_start = new_auto_start;
+            }
             state.borrow().save();
             AppState::restart_timer(&state);
+            if let Ok(exe) = std::env::current_exe() {
+                autostart::apply(new_auto_start, &exe);
+            }
             window.hide().ok();
         }
     });
