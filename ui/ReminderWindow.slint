@@ -5,25 +5,29 @@ export component ReminderWindow inherits Window {
     width: 500px;
     height: 300px;
     always-on-top: true;
-    no-frame: false;
 
     callback dismissed();
 
     VerticalBox {
         padding: 20px;
-        alignment: center;
+        spacing: 16px;
 
-        Text {
-            text: "⏰ 時間到！";
-            font-size: 48px;
-            horizontal-alignment: center;
+        VerticalLayout {
+            alignment: center;
+            spacing: 20px;
+            Text {
+                text: "⏰ 時間到！";
+                font-size: 48px;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: "現在立刻離開座位，喝杯水，讓眼睛過濾一下吧！";
+                font-size: 18px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
         }
-        Text {
-            text: "現在立刻離開座位，喝杯水，讓眼睛過濾一下吧！";
-            font-size: 18px;
-            horizontal-alignment: center;
-            wrap: word-wrap;
-        }
+
         Button {
             text: "我知道了";
             height: 50px;
