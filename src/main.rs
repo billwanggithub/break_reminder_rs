@@ -48,6 +48,7 @@ fn main() -> Result<(), slint::PlatformError> {
     settings_window.set_interval_minutes(app_state.borrow().settings.interval_minutes as i32);
     settings_window.set_auto_start(app_state.borrow().settings.auto_start);
     settings_window.set_play_sound(app_state.borrow().settings.play_sound);
+    settings_window.set_muted(app_state.borrow().settings.muted);
 
     settings_window.on_add_reminder({
         let model = reminders_model.clone();
@@ -94,18 +95,21 @@ fn main() -> Result<(), slint::PlatformError> {
             let new_interval = window.get_interval_minutes().max(1) as u32;
             let new_auto_start = window.get_auto_start();
             let new_play_sound = window.get_play_sound();
+            let new_muted = window.get_muted();
             let new_reminders = reminders_from_model(&model);
             {
                 let mut s = state.borrow_mut();
                 s.settings.interval_minutes = new_interval;
                 s.settings.auto_start = new_auto_start;
                 s.settings.play_sound = new_play_sound;
+                s.settings.muted = new_muted;
                 s.settings.scheduled_reminders = new_reminders;
             }
             state.borrow().save();
             AppState::restart_timer(&state);
             AppState::restart_schedule_timer(&state);
             schedule::check_due_reminders(&state);
+            tray::refresh_mute_visuals(new_muted);
             if let Ok(exe) = std::env::current_exe() {
                 autostart::apply(new_auto_start, &exe);
             }

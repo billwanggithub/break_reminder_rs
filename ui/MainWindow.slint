@@ -15,6 +15,7 @@ export component MainWindow inherits Window {
     in-out property <int> interval-minutes: 45;
     in-out property <bool> auto-start: true;
     in-out property <bool> play-sound: false;
+    in-out property <bool> muted: false;
     in-out property <[ScheduledReminderRow]> reminders;
     callback save-clicked();
     callback add-reminder();
@@ -35,6 +36,11 @@ export component MainWindow inherits Window {
                 value <=> root.interval-minutes;
             }
             Text { text: "分鐘"; vertical-alignment: center; font-size: 14px; }
+        }
+
+        CheckBox {
+            text: "請勿打擾（暫停所有提醒）";
+            checked <=> root.muted;
         }
 
         CheckBox {
