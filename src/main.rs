@@ -1,5 +1,6 @@
 mod settings;
 mod state;
+mod tray;
 
 use slint::ComponentHandle;
 use state::AppState;
@@ -29,10 +30,10 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
-    AppState::restart_timer(&app_state);
+    let _tray = tray::build();
+    tray::install_state(app_state.clone());
 
-    // Temporary: open settings window for development. Tray will replace this in Task 5.
-    settings_window.show()?;
+    AppState::restart_timer(&app_state);
 
     slint::run_event_loop()
 }
