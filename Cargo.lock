@@ -629,6 +629,8 @@ dependencies = [
 name = "break_reminder_rs"
 version = "0.1.0"
 dependencies = [
+ "bitflags 2.11.1",
+ "chrono",
  "dirs 5.0.1",
  "image",
  "serde",
@@ -827,6 +829,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link 0.2.1",
 ]
