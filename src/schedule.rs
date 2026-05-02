@@ -179,3 +179,60 @@ pub fn seed_defaults() -> Vec<ScheduledReminder> {
         },
     ]
 }
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use crate::state::{show_reminder, AppState};
+
+/// Walk the reminder list. Fire each reminder that is due NOW and hasn't
+/// already fired today. Marks `last_fired_date` and persists settings on
+/// the first match.
+pub fn check_due_reminders(state: &Rc<RefCell<AppState>>) {
+    let now = chrono::Local::now();
+    let today = now.date_naive();
+    let current_time = now.time();
+
+    // Collect indices to fire so we don't borrow `state` mutably while
+    // inside the per-reminder iteration (show_reminder borrows state too).
+    let mut due_indices: Vec<usize> = Vec::new();
+    {
+        let s = state.borrow();
+        for (i, r) in s.settings.scheduled_reminders.iter().enumerate() {
+            if !r.enabled { continue; }
+            if r.last_fired_date == Some(today) { continue; }
+            if !r.days.matches(today.weekday()) { continue; }
+            if current_time < r.time { continue; }
+            let elapsed = current_time.signed_duration_since(r.time);
+            if elapsed > chrono::Duration::minutes(2) { continue; }
+            due_indices.push(i);
+        }
+    }
+
+    if due_indices.is_empty() {
+        return;
+    }
+
+    // Mark + save first, then show reminders. This way even if show_reminder
+    // panics or a window fails to open, last_fired_date is committed and we
+    // won't re-fire in 30s.
+    let messages: Vec<String> = {
+        let mut s = state.borrow_mut();
+        let mut msgs = Vec::with_capacity(due_indices.len());
+        for &i in &due_indices {
+            s.settings.scheduled_reminders[i].last_fired_date = Some(today);
+            msgs.push(s.settings.scheduled_reminders[i].message.clone());
+        }
+        msgs
+    };
+    state.borrow().save();
+
+    // Show each due reminder. The dedup logic in show_reminder means only
+    // the first one that opens a fresh window will visually display;
+    // subsequent ones still go through but their message is dropped on
+    // the already-shown path. This matches the spec's documented limitation
+    // (no pending queue).
+    for msg in messages {
+        show_reminder(state, Some(&msg));
+    }
+}

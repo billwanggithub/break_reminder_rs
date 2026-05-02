@@ -14,6 +14,7 @@ pub struct AppState {
     pub settings_window: Weak<MainWindow>,
     pub reminder_window: Option<ReminderWindow>,
     pub timer: Timer,
+    pub schedule_timer: Timer,
 }
 
 impl AppState {
@@ -24,6 +25,7 @@ impl AppState {
             settings_window,
             reminder_window: None,
             timer: Timer::default(),
+            schedule_timer: Timer::default(),
         }))
     }
 
@@ -35,7 +37,20 @@ impl AppState {
             Duration::from_secs(interval_minutes as u64 * 60),
             move || {
                 if let Some(s) = weak_state.upgrade() {
-                    show_reminder(&s);
+                    show_reminder(&s, None);
+                }
+            },
+        );
+    }
+
+    pub fn restart_schedule_timer(state: &Rc<RefCell<Self>>) {
+        let weak_state = Rc::downgrade(state);
+        state.borrow().schedule_timer.start(
+            TimerMode::Repeated,
+            Duration::from_secs(30),
+            move || {
+                if let Some(s) = weak_state.upgrade() {
+                    crate::schedule::check_due_reminders(&s);
                 }
             },
         );
@@ -56,7 +71,7 @@ pub fn show_settings(state: &Rc<RefCell<AppState>>) {
     window.show().ok();
 }
 
-pub fn show_reminder(state: &Rc<RefCell<AppState>>) {
+pub fn show_reminder(state: &Rc<RefCell<AppState>>, message: Option<&str>) {
     if state.borrow().reminder_window.is_some() {
         if let Some(w) = state.borrow().reminder_window.as_ref().map(|w| w.as_weak()) {
             if let Some(w) = w.upgrade() {
@@ -76,6 +91,10 @@ pub fn show_reminder(state: &Rc<RefCell<AppState>>) {
             return;
         }
     };
+
+    if let Some(m) = message {
+        window.set_message(m.into());
+    }
 
     if state.borrow().settings.play_sound {
         crate::sound::play_alert();

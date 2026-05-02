@@ -67,7 +67,7 @@ pub fn build() -> Tray {
                 if event.id == settings_id {
                     show_settings(state);
                 } else if event.id == break_id {
-                    show_reminder(state);
+                    show_reminder(state, None);
                 } else if event.id == exit_id {
                     slint::quit_event_loop().ok();
                 }

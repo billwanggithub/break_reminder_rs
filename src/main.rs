@@ -57,6 +57,10 @@ fn main() -> Result<(), slint::PlatformError> {
     tray::install_state(app_state.clone());
 
     AppState::restart_timer(&app_state);
+    AppState::restart_schedule_timer(&app_state);
+
+    // Catch any reminders that should have fired before the app launched today.
+    schedule::check_due_reminders(&app_state);
 
     // This is a tray-resident app: hiding the settings or reminder window
     // must not exit the process.

@@ -6,6 +6,7 @@ export component ReminderWindow inherits Window {
     height: 300px;
     always-on-top: true;
 
+    in property <string> message: "現在立刻離開座位，喝杯水，讓眼睛過濾一下吧！";
     callback dismissed();
 
     VerticalBox {
@@ -21,7 +22,7 @@ export component ReminderWindow inherits Window {
                 horizontal-alignment: center;
             }
             Text {
-                text: "現在立刻離開座位，喝杯水，讓眼睛過濾一下吧！";
+                text: root.message;
                 font-size: 18px;
                 horizontal-alignment: center;
                 wrap: word-wrap;
