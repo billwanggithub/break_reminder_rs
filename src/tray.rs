@@ -8,6 +8,10 @@ use tray_icon::{
 
 use crate::state::{show_reminder, show_settings, AppState};
 
+// `tray-icon`'s event handlers require `Fn + Send + Sync + 'static`, but
+// `Rc<RefCell<AppState>>` is `!Send + !Sync`. Handler closures capture only
+// `MenuId`/`TrayIconId` (which are Send + Sync), then hop to the UI thread
+// via `slint::invoke_from_event_loop` and recover state from this thread_local.
 thread_local! {
     static APP_STATE: RefCell<Option<Rc<RefCell<AppState>>>> = const { RefCell::new(None) };
 }
@@ -53,6 +57,8 @@ pub fn build() -> Tray {
     let tray_id = tray.id().clone();
 
     MenuEvent::set_event_handler(Some(move |event: MenuEvent| {
+        // The outer handler is `Fn`, so each invocation must clone the ids
+        // afresh before moving them into the `FnOnce` posted to the UI thread.
         let settings_id = settings_id.clone();
         let break_id = break_id.clone();
         let exit_id = exit_id.clone();
