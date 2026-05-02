@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
+use crate::schedule::ScheduledReminder;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Settings {
     #[serde(rename = "IntervalMinutes")]
@@ -9,6 +11,8 @@ pub struct Settings {
     pub auto_start: bool,
     #[serde(rename = "PlaySound", default)]
     pub play_sound: bool,
+    #[serde(rename = "ScheduledReminders", default)]
+    pub scheduled_reminders: Vec<ScheduledReminder>,
 }
 
 fn default_auto_start() -> bool {
@@ -21,6 +25,7 @@ impl Default for Settings {
             interval_minutes: 45,
             auto_start: true,
             play_sound: false,
+            scheduled_reminders: Vec::new(),
         }
     }
 }
