@@ -1,0 +1,32 @@
+import { SpinBox, Button, VerticalBox } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "設定 - 休息提醒小幫手";
+    width: 360px;
+    height: 180px;
+
+    in-out property <int> interval-minutes: 45;
+    callback save-clicked();
+
+    VerticalBox {
+        padding: 20px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: center;
+            Text { text: "休息間隔："; vertical-alignment: center; font-size: 14px; }
+            SpinBox {
+                minimum: 1;
+                maximum: 240;
+                value <=> root.interval-minutes;
+            }
+            Text { text: "分鐘"; vertical-alignment: center; font-size: 14px; }
+        }
+
+        Button {
+            text: "儲存並隱藏";
+            clicked => { root.save-clicked(); }
+        }
+    }
+}
