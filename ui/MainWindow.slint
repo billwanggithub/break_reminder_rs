@@ -3,10 +3,11 @@ import { SpinBox, Button, CheckBox, VerticalBox } from "std-widgets.slint";
 export component MainWindow inherits Window {
     title: "設定 - 休息提醒小幫手";
     width: 360px;
-    height: 220px;
+    height: 250px;
 
     in-out property <int> interval-minutes: 45;
     in-out property <bool> auto-start: true;
+    in-out property <bool> play-sound: false;
     callback save-clicked();
 
     VerticalBox {
@@ -28,6 +29,11 @@ export component MainWindow inherits Window {
         CheckBox {
             text: "登入時自動啟動";
             checked <=> root.auto-start;
+        }
+
+        CheckBox {
+            text: "播放提示音";
+            checked <=> root.play-sound;
         }
 
         Button {
