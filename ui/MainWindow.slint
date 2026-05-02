@@ -1,14 +1,25 @@
-import { SpinBox, Button, CheckBox, VerticalBox } from "std-widgets.slint";
+import { SpinBox, Button, CheckBox, LineEdit, ScrollView, VerticalBox } from "std-widgets.slint";
+
+export struct ScheduledReminderRow {
+    enabled: bool,
+    time-text: string,
+    mon: bool, tue: bool, wed: bool, thu: bool, fri: bool, sat: bool, sun: bool,
+    message: string,
+}
 
 export component MainWindow inherits Window {
     title: "設定 - 休息提醒小幫手";
-    width: 360px;
-    height: 250px;
+    width: 720px;
+    height: 560px;
 
     in-out property <int> interval-minutes: 45;
     in-out property <bool> auto-start: true;
     in-out property <bool> play-sound: false;
+    in-out property <[ScheduledReminderRow]> reminders;
     callback save-clicked();
+    callback add-reminder();
+    callback delete-reminder(int);
+    callback update-row(int, ScheduledReminderRow);
 
     VerticalBox {
         padding: 20px;
@@ -16,7 +27,7 @@ export component MainWindow inherits Window {
 
         HorizontalLayout {
             spacing: 8px;
-            alignment: center;
+            alignment: start;
             Text { text: "休息間隔："; vertical-alignment: center; font-size: 14px; }
             SpinBox {
                 minimum: 1;
@@ -34,6 +45,149 @@ export component MainWindow inherits Window {
         CheckBox {
             text: "播放提示音";
             checked <=> root.play-sound;
+        }
+
+        Text { text: "排程提醒"; font-size: 14px; font-weight: 700; }
+
+        HorizontalLayout {
+            spacing: 6px;
+            Text { text: "啟用"; width: 36px; horizontal-alignment: center; font-size: 11px; color: gray; }
+            Text { text: "時間"; width: 60px; horizontal-alignment: center; font-size: 11px; color: gray; }
+            Text { text: "一  二  三  四  五  六  日"; width: 224px; horizontal-alignment: center; font-size: 11px; color: gray; }
+            Text { text: "訊息"; horizontal-alignment: left; font-size: 11px; color: gray; horizontal-stretch: 1; }
+            Text { text: ""; width: 32px; }
+        }
+
+        ScrollView {
+            height: 200px;
+            VerticalLayout {
+                spacing: 4px;
+                for r[i] in root.reminders : HorizontalLayout {
+                    spacing: 6px;
+                    CheckBox {
+                        width: 36px;
+                        checked: r.enabled;
+                        toggled => {
+                            root.update-row(i, {
+                                enabled: self.checked,
+                                time-text: r.time-text,
+                                mon: r.mon, tue: r.tue, wed: r.wed, thu: r.thu, fri: r.fri, sat: r.sat, sun: r.sun,
+                                message: r.message,
+                            });
+                        }
+                    }
+                    LineEdit {
+                        width: 60px;
+                        text: r.time-text;
+                        edited => {
+                            root.update-row(i, {
+                                enabled: r.enabled,
+                                time-text: self.text,
+                                mon: r.mon, tue: r.tue, wed: r.wed, thu: r.thu, fri: r.fri, sat: r.sat, sun: r.sun,
+                                message: r.message,
+                            });
+                        }
+                    }
+                    HorizontalLayout {
+                        width: 224px;
+                        spacing: 2px;
+                        CheckBox {
+                            width: 30px;
+                            checked: r.mon;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: self.checked, tue: r.tue, wed: r.wed, thu: r.thu, fri: r.fri, sat: r.sat, sun: r.sun,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                        CheckBox {
+                            width: 30px;
+                            checked: r.tue;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: r.mon, tue: self.checked, wed: r.wed, thu: r.thu, fri: r.fri, sat: r.sat, sun: r.sun,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                        CheckBox {
+                            width: 30px;
+                            checked: r.wed;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: r.mon, tue: r.tue, wed: self.checked, thu: r.thu, fri: r.fri, sat: r.sat, sun: r.sun,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                        CheckBox {
+                            width: 30px;
+                            checked: r.thu;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: r.mon, tue: r.tue, wed: r.wed, thu: self.checked, fri: r.fri, sat: r.sat, sun: r.sun,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                        CheckBox {
+                            width: 30px;
+                            checked: r.fri;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: r.mon, tue: r.tue, wed: r.wed, thu: r.thu, fri: self.checked, sat: r.sat, sun: r.sun,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                        CheckBox {
+                            width: 30px;
+                            checked: r.sat;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: r.mon, tue: r.tue, wed: r.wed, thu: r.thu, fri: r.fri, sat: self.checked, sun: r.sun,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                        CheckBox {
+                            width: 30px;
+                            checked: r.sun;
+                            toggled => {
+                                root.update-row(i, {
+                                    enabled: r.enabled, time-text: r.time-text,
+                                    mon: r.mon, tue: r.tue, wed: r.wed, thu: r.thu, fri: r.fri, sat: r.sat, sun: self.checked,
+                                    message: r.message,
+                                });
+                            }
+                        }
+                    }
+                    LineEdit {
+                        horizontal-stretch: 1;
+                        text: r.message;
+                        edited => {
+                            root.update-row(i, {
+                                enabled: r.enabled, time-text: r.time-text,
+                                mon: r.mon, tue: r.tue, wed: r.wed, thu: r.thu, fri: r.fri, sat: r.sat, sun: r.sun,
+                                message: self.text,
+                            });
+                        }
+                    }
+                    Button { text: "✕"; width: 32px; clicked => { root.delete-reminder(i); } }
+                }
+            }
+        }
+
+        Button {
+            text: "+ 新增提醒";
+            clicked => { root.add-reminder(); }
         }
 
         Button {
