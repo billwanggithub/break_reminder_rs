@@ -7,6 +7,8 @@ pub struct Settings {
     pub interval_minutes: u32,
     #[serde(rename = "AutoStart", default = "default_auto_start")]
     pub auto_start: bool,
+    #[serde(rename = "PlaySound", default)]
+    pub play_sound: bool,
 }
 
 fn default_auto_start() -> bool {
@@ -18,6 +20,7 @@ impl Default for Settings {
         Self {
             interval_minutes: 45,
             auto_start: true,
+            play_sound: false,
         }
     }
 }
