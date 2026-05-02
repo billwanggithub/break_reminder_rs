@@ -5,6 +5,7 @@ mod state;
 mod tray;
 mod autostart;
 mod sound;
+mod schedule;
 
 use slint::ComponentHandle;
 use state::AppState;
