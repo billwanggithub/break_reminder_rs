@@ -4,6 +4,7 @@ mod settings;
 mod state;
 mod tray;
 mod autostart;
+mod sound;
 
 use slint::ComponentHandle;
 use state::AppState;

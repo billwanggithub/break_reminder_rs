@@ -77,6 +77,10 @@ pub fn show_reminder(state: &Rc<RefCell<AppState>>) {
         }
     };
 
+    if state.borrow().settings.play_sound {
+        crate::sound::play_alert();
+    }
+
     window.on_dismissed({
         let weak_state = Rc::downgrade(state);
         let weak_window = window.as_weak();
