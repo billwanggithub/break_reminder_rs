@@ -5,11 +5,20 @@ use serde::{Deserialize, Serialize};
 pub struct Settings {
     #[serde(rename = "IntervalMinutes")]
     pub interval_minutes: u32,
+    #[serde(rename = "AutoStart", default = "default_auto_start")]
+    pub auto_start: bool,
+}
+
+fn default_auto_start() -> bool {
+    true
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { interval_minutes: 45 }
+        Self {
+            interval_minutes: 45,
+            auto_start: true,
+        }
     }
 }
 
